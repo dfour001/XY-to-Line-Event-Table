@@ -8,11 +8,14 @@ def dms_to_dd(dms):
             W79-30'-16.35"  =>  -79.5045
     """
     WorS = False # Western or Southern Hemisphere
+
+    # Check if hemisphere is specified as the last char
     if str(dms).strip()[-1] in ['N', 'W']:
         if dms[-1] == 'W':
             WorS = True
         dms = dms[:-1]
     
+    # Check if hemisphere is specified by negative sign as the first char
     if str(dms)[0] == '-':
         WorS = True
 
@@ -27,7 +30,7 @@ def dms_to_dd(dms):
 
         return dms
     except:
-        pass
+        pass # input is not DD - proceed with conversion
 
     d = None
     m = None
@@ -36,7 +39,7 @@ def dms_to_dd(dms):
     
 
     ## Parse D, M, and S from input string
-    # Replace everything that's not a number or . with ~
+    # Replace everything that's not a number or decimal with '~'
     remove = []
     for c in dms:
         try:

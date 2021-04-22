@@ -7,9 +7,8 @@ from shapely.ops import nearest_points, transform
 import pyproj
 import traceback
 import math
+# from main import lrsPath
 
-
-data = 'data/ProjectPipeline.csv'
 lrsPath = 'data/LRS_Salem.shp'
 lrs = gp.read_file(lrsPath)
 lrs = lrs.to_crs(epsg=26918) # 26918 = UTM 18N
@@ -48,6 +47,7 @@ class LRSVertex:
 def find_distance(p1, p2):
     """ Find the distance between two input shapely Points """
     return math.sqrt(abs(p1.x - p2.x)**2 + abs(p1.y - p2.y)**2)
+
 
 def select_nearby_routes(point, d):
     """ Selects routes within d distance from the input point.
@@ -143,7 +143,7 @@ def create_event_table(csvPath, outPath):
         for row in fileData:
             try:
                 org = row['organization']
-                proj_ID = row['name']
+                proj_ID = row['id']
                 begin_lat = float(row['begin_lat'])
                 begin_lng = float(row['begin_lng'])
                 end_lat = float(row['end_lat'])
@@ -153,16 +153,30 @@ def create_event_table(csvPath, outPath):
                 rte_nm = None
                 begin_msr = None
                 end_msr = None
-                comment = None
+                comment = ''
 
                 # Project points
                 project = pyproj.Transformer.from_crs(wgs84, utm, always_xy=True).transform
                 beginPoint = transform(project, beginPoint)
                 endPoint = transform(project, endPoint)
 
-                beginRoutes = select_nearby_routes(beginPoint, 15)
-                endRoutes = select_nearby_routes(endPoint, 15)
-                matchRoutes = [rte for rte in beginRoutes if rte in endRoutes]
+                # Search nearby routes until it's clear which rte_nm a project belongs to by
+                # reducing the search radius by 1 meter until only 1 rte_nm matches between
+                # both begin point and end point.
+                x = 25 # Initial search distance
+                matchRoutes = None
+                while x > 0:
+                    # Select routes found within x meters of point
+                    beginRoutes = select_nearby_routes(beginPoint, x)
+                    endRoutes = select_nearby_routes(endPoint, x)
+
+                    # Find rte_nm that matches between both points
+                    matchRoutes = [rte for rte in beginRoutes if rte in endRoutes]
+
+                    if len(matchRoutes) in (0, 1):
+                        break
+
+                    x -= 1
 
                 if not matchRoutes:
                     comment = "ERROR No matching routes found."
@@ -174,12 +188,20 @@ def create_event_table(csvPath, outPath):
                 if begin_msr and end_msr and begin_msr == end_msr:
                     end_msr += 0.01
 
+                # Check if lat/lng are duplicated
+                if begin_lat == end_lat and begin_lng == end_lng:
+                    comment += "  ERROR Begin and end point are identical"
+
                 outputRow = {
                     "organization": org,
-                    "name": proj_ID,
+                    "id": proj_ID,
                     "rte_nm": rte_nm,
                     "begin_msr": begin_msr,
                     "end_msr": end_msr,
+                    "begin_lat": begin_lat,
+                    "begin_lng": begin_lng,
+                    "end_lat": end_lat,
+                    "end_lng": end_lng,
                     "comments": comment
                 }
 
@@ -188,7 +210,7 @@ def create_event_table(csvPath, outPath):
             except Exception as e:
                 print(e)
                 # print(traceback.format_exc())
-                print(f"{row['name']}.")
+                print(f"{row['id']}.")
                 comment = "ERROR"
                 try:
                     if not row['begin_lat']:
@@ -202,16 +224,26 @@ def create_event_table(csvPath, outPath):
                 except:
                     pass
 
+                # Check if lat/lng are duplicates
+                if row['begin_lat'] and row['end_lat'] and row['begin_lng'] and row['end_lng']:
+                    if row['begin_lat'] == row['end_lat'] and row['begin_lng'] == row['end_lng']:
+                        comment += "  ERROR Begin and end point are identical"
+
                 outputRow = {
                     "organization" : row['organization'],
-                    "name": row['name'],
+                    "id": row['id'],
                     "rte_nm": None,
                     "begin_msr": None,
                     "end_msr": None,
+                    "begin_lat": row['begin_lat'],
+                    "begin_lng": row['begin_lng'],
+                    "end_lat": row['end_lat'],
+                    "end_lng": row['end_lng'],
                     "comments": comment
                 }
                 outputRows.append(outputRow)
 
     outputDF = pd.DataFrame(outputRows)
     outputDF.to_csv(outPath, index=False)
+    print(f'Event table saved at "{outPath}"')
 
