@@ -17,12 +17,12 @@ from DMSToDD import dms_to_dd
 from CreateEventTable import create_event_table
 
 # This should be a csv with all projects in a single sheet
-inputFilePath = r'data\Data_All_Except_Galax.csv'
+inputFilePath = r'data\AllProjects.csv'
 
 # This will be created by the script after converting coordinates to DD
-inputFileConverted = r'data\Data_All_Except_Galax_DD.csv'
+inputFileConverted = r'data\AllProjects_DD.csv'
 
-outputEventTable = r'data\Data_All_Except_Galax_Events.csv'
+outputEventTable = r'data\AllProjects_Events.csv'
 
 
 

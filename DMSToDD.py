@@ -66,6 +66,19 @@ def dms_to_dd(dms):
                 numList.append(s)
         except:
             pass
+
+    if len(numList) == 1: # Probably DD value already
+        try:
+            dms = float(numList[0])
+            if WorS and dms > 0: # If this is in DD format, should be negative, but is not
+                dms = dms * -1
+            
+            if dms > 60: # In VA, this means it's longitude and should be negative
+                dms = dms * -1
+
+            return dms
+        except:
+            pass # input is not DD - proceed with conversion
     
     try:
         d = int(numList[0])
@@ -88,7 +101,7 @@ def dms_to_dd(dms):
 
 
 if __name__ == '__main__':
-    # input = "37°13'50.7"
+    # input = "-80.214244°"
     # output = dms_to_dd(input)
     # print(f'Input: {input}\nOutput: {output}\n')
 
@@ -96,7 +109,7 @@ if __name__ == '__main__':
     # output = dms_to_dd(input)
     # print(f'Input: {input}\nOutput: {output}\n')
 
-    input = "79.71535"
+    input = "-80.214244°"
     output = dms_to_dd(input)
     print(f'Input: {input}\nOutput: {output}\n')
     

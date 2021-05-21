@@ -146,8 +146,16 @@ def create_event_table(csvPath, outPath):
                 proj_ID = row['id']
                 begin_lat = float(row['begin_lat'])
                 begin_lng = float(row['begin_lng'])
-                end_lat = float(row['end_lat'])
-                end_lng = float(row['end_lng'])
+                # Check for missing end coordinates (point data) and duplicate w/ begin coordinates if needed
+                if row['end_lat'] == "":
+                    end_lat = float(row['begin_lat'])
+                else:                
+                    end_lat = float(row['end_lat'])
+                
+                if row['end_lng'] == "":
+                    end_lng = float(row['begin_lng'])
+                else:
+                    end_lng = float(row['end_lng'])
                 beginPoint = Point(begin_lng, begin_lat)
                 endPoint = Point(end_lng, end_lat)
                 rte_nm = None
@@ -173,7 +181,21 @@ def create_event_table(csvPath, outPath):
                     # Find rte_nm that matches between both points
                     matchRoutes = [rte for rte in beginRoutes if rte in endRoutes]
 
-                    if len(matchRoutes) in (0, 1):
+                    if x == 25 and len(matchRoutes) == 0:
+                        # No routes within 25m of point
+                        break
+
+                    if x < 25 and len(matchRoutes) == 0:
+                        # Both routes are close to equal distance.  Go back one meter and return both routes.
+                        print('Return both routes')
+                        x += 1
+                        beginRoutes = select_nearby_routes(beginPoint, x)
+                        endRoutes = select_nearby_routes(endPoint, x)
+                        matchRoutes = [rte for rte in beginRoutes if rte in endRoutes]
+                        break
+
+                    if len(matchRoutes) == 1:
+                        # Route found
                         break
 
                     x -= 1
@@ -186,7 +208,8 @@ def create_event_table(csvPath, outPath):
                     end_msr = locate_point_on_route(rte_nm, endPoint)
 
                 if begin_msr and end_msr and begin_msr == end_msr:
-                    end_msr += 0.01
+                    begin_msr -= 0.1
+                    end_msr += 0.1
 
                 # Check if lat/lng are duplicated
                 if begin_lat == end_lat and begin_lng == end_lng:

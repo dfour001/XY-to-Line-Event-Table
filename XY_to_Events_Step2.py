@@ -31,13 +31,13 @@ arcpy.CheckOutExtension("Network")
 NetworkDataset = r'C:\Users\daniel.fourquet\Documents\GitHub\XY-to-Line-Event-Table\data\LRS_Salem_ND.nd'
 
 # Event table in csv format with id and comments field
-inputData = r'C:\Users\daniel.fourquet\Documents\GitHub\XY-to-Line-Event-Table\data\Data_All_Except_Galax_Events.csv'
+inputData = r'C:\Users\daniel.fourquet\Documents\GitHub\XY-to-Line-Event-Table\data\AllProjects_Events.csv'
 
-# Before running, you must create begin and end point feature classes, thanks to arcpy's inconsistency with
-# its ability to read CSV files.  Thanks ESRI!
-all_points = r'C:\Users\daniel.fourquet\Documents\GitHub\XY-to-Line-Event-Table\data\SalemData.gdb\All_Points'
-outputLinesPath = r'C:\Users\daniel.fourquet\Documents\GitHub\XY-to-Line-Event-Table\data\SalemData.gdb'
-outputLinesFileName = 'LastTryForTuesAgain'
+# Before running, you must create begin and end point feature classes.  This isn't done automatically here
+# thanks to arcpy's inconsistency with its ability to read CSV files.  Thanks ESRI!
+all_points = r'C:\Users\daniel.fourquet\Documents\GitHub\XY-to-Line-Event-Table\data\salemData.gdb\AllPoints'
+outputLinesPath = r'C:\Users\daniel.fourquet\Documents\GitHub\XY-to-Line-Event-Table\data\salemData05212021.gdb'
+outputLinesFileName = 'NetworkAnalyst'
 outputLines = "{}\\{}".format(outputLinesPath, outputLinesFileName)
 
 print('Make Route Layer')
